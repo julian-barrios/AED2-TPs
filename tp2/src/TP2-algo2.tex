@@ -1,0 +1,928 @@
+\documentclass[a4paper,10pt]{article}
+\usepackage[paper=a4paper, hmargin=1.5cm, bottom=1.5cm, top=3.5cm]{geometry}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{xspace}
+\usepackage{xargs}
+\usepackage{ifthen}
+\usepackage{aed2-tad,aed2-symb,aed2-itef, caratula}
+\usepackage{algorithmicx, algpseudocode, algorithm}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+
+
+
+\hypersetup{%
+ % Para que el PDF se abra a página completa.
+ pdfstartview= {FitH \hypercalcbp{\paperheight-\topmargin-1in-\headheight}},
+ pdfauthor={Cátedra de Algoritmos y Estructuras de Datos II - DC - UBA},
+ pdfkeywords={Módulos básicos},
+ pdftitle={Módulos básicos de diseño},
+ pdfsubject={Módulos básicos de diseño}
+}
+\materia{Algoritmos y Estructuras de Datos II} 
+\submateria{Segundo Cuatrimestre de 2021} 
+\titulo{Trabajo Pr\'actico 2} 
+\subtitulo{Dise\~no}
+\grupo{Grupo: bjtp}
+
+
+\integrante{Tomás Crivelli}{}{tomas\_crivelli@hotmail.com}
+\integrante{Julián Ezequiel Barrios}{718/18}{juebarrios@gmail.com}
+
+
+\pagestyle{fancy}
+\thispagestyle{fancy}
+\addtolength{\headheight}{1pt}
+\lhead{Algoritmos y Estructuras de Datos II}
+\rhead{Trabajo Práctico 2}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PARAMETROS A SER MODIFICADOS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%cuatrimestre de acuerdo a la opcion
+\newcommand{\Cuatrimestre}{$2^\mathrm{do}$ cuatrimestre de 2021}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% OTRAS OPCIONES QUE NO HAY QUE MODIFICAR
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%opening
+\title{TP2 Algo2landia}
+\author{Algoritmos y Estructuras de Datos II}
+\date{\Cuatrimestre}
+
+% Acomodo fancyhdr.
+\pagestyle{fancy}
+\thispagestyle{fancy}
+\lhead{Algoritmos y Estructuras de Datos II}
+\rhead{\Cuatrimestre}
+\cfoot{\thepage /\pageref{LastPage}}
+\renewcommand{\footrulewidth}{0.4pt}
+\setlength{\headheight}{13pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMANDOS QUE ALGUN DIA PUEDAN FORMAR UN PAQUETE.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\moduloNombre}[1]{\textbf{#1}}
+
+\let\NombreFuncion=\textsc
+\let\TipoVariable=\texttt
+\let\ModificadorArgumento=\textbf
+\newcommand{\res}{$res$\xspace}
+\newcommand{\tab}{\hspace*{7mm}}
+
+\newcommandx{\TipoFuncion}[3]{%
+  \NombreFuncion{#1}(#2) \ifx#3\empty\else $\to$ \res\,: \TipoVariable{#3}\fi%
+}
+\newcommand{\In}[2]{\ModificadorArgumento{in} \ensuremath{#1}\,: \TipoVariable{#2}\xspace}
+\newcommand{\Out}[2]{\ModificadorArgumento{out} \ensuremath{#1}\,: \TipoVariable{#2}\xspace}
+\newcommand{\Inout}[2]{\ModificadorArgumento{in/out} \ensuremath{#1}\,: \TipoVariable{#2}\xspace}
+\newcommand{\Aplicar}[2]{\NombreFuncion{#1}(#2)}
+
+\newlength{\IntFuncionLengthA}
+\newlength{\IntFuncionLengthB}
+\newlength{\IntFuncionLengthC}
+%InterfazFuncion(nombre, argumentos, valor retorno, precondicion, postcondicion, complejidad, descripcion, aliasing)
+\newcommandx{\InterfazFuncion}[9][4=true,6,7,8,9]{%
+  \hangindent=\parindent
+  \TipoFuncion{#1}{#2}{#3}\\%
+  \textbf{Pre} $\equiv$ \{#4\}\\%
+  \textbf{Post} $\equiv$ \{#5\}%
+  \ifx#6\empty\else\\\textbf{Complejidad:} #6\fi%
+  \ifx#7\empty\else\\\textbf{Descripci\'on:} #7\fi%
+  \ifx#8\empty\else\\\textbf{Aliasing:} #8\fi%
+  \ifx#9\empty\else\\\textbf{Requiere:} #9\fi%
+}
+
+\newenvironment{Interfaz}{%
+  \parskip=2ex%
+  \noindent\textbf{\Large Interfaz}%
+  \par%
+}{}
+
+\newenvironment{Representacion}{%
+  \vspace*{2ex}%
+  \noindent\textbf{\Large Representación}%
+  \vspace*{2ex}%
+}{}
+
+\newenvironment{Algoritmos}{%
+  \vspace*{2ex}%
+  \noindent\textbf{\Large Algoritmos}%
+  \vspace*{2ex}%
+}{}
+
+
+\newcommand{\Title}[1]{
+  \vspace*{1ex}\par\noindent\textbf{\large #1}\par
+}
+
+\newenvironmentx{Estructura}[2][2={estr}]{%
+  \par\vspace*{2ex}%
+  \TipoVariable{#1} \textbf{se representa con} \TipoVariable{#2}%
+  \par\vspace*{1ex}%
+}{%
+  \par\vspace*{2ex}%
+}%
+
+\newboolean{EstructuraHayItems}
+\newlength{\lenTupla}
+\newenvironmentx{Tupla}[1][1={estr}]{%
+    \settowidth{\lenTupla}{\hspace*{3mm}donde \TipoVariable{#1} es \TipoVariable{tupla}$($}%
+    \addtolength{\lenTupla}{\parindent}%
+    \hspace*{3mm}donde \TipoVariable{#1} es \TipoVariable{tupla}$\langle$%
+    \begin{minipage}[t]{\linewidth-\lenTupla}%
+    \setboolean{EstructuraHayItems}{false}%
+}{%
+    $\rangle$%
+    \end{minipage}
+}
+
+
+\newcommandx{\tupItem}[3][1={\ }]{%
+    %\hspace*{3mm}%
+    \ifthenelse{\boolean{EstructuraHayItems}}{%
+        ,#1%
+    }{}%
+    \emph{#2}: \TipoVariable{#3}%
+    \setboolean{EstructuraHayItems}{true}%
+}
+
+\newcommandx{\RepFc}[3][1={estr},2={e}]{%
+  \tadOperacion{Rep}{#1}{bool}{}%
+  \tadAxioma{Rep($#2$)}{#3}%
+}%
+
+\newcommandx{\Rep}[3][1={estr},2={e}]{%
+  \tadOperacion{Rep}{#1}{bool}{}%
+  \tadAxioma{Rep($#2$)}{true \ssi #3}%
+}%
+
+\newcommandx{\Abs}[5][1={estr},3={e}]{%
+  \tadOperacion{Abs}{#1/#3}{#2}{Rep($#3$)}%
+  \settominwidth{\hangindent}{Abs($#3$) \igobs #4: #2 $\mid$ }%
+  \addtolength{\hangindent}{\parindent}%
+  Abs($#3$) \igobs #4: #2 $\mid$ #5%
+}%
+
+\newcommandx{\AbsFc}[4][1={estr},3={e}]{%
+  \tadOperacion{Abs}{#1/#3}{#2}{Rep($#3$)}%
+  \tadAxioma{Abs($#3$)}{#4}%
+}%
+
+
+\newcommand{\DRef}{\ensuremath{\rightarrow}}
+
+\begin{document}
+
+%pagina de titulo
+\thispagestyle{empty}
+\maketitle
+\tableofcontents
+
+\newpage
+
+\section{Módulo Simulación}
+
+
+\begin{Interfaz}
+
+\subsection{Interfaz}
+
+  \textbf{se explica con}: \tadNombre{Simulación, Mapa, Objetivo}.
+
+  \textbf{géneros}: \TipoVariable{sim}.
+
+
+  \InterfazFuncion{NuevaSimulación}{\In{m}{mapa}, \In{p}{pos}, \In{objetos}{dicc(color, pos)}}{sim}%
+  [enRango($m, p$) $\land$ \\
+  (($\forall c$: color) def?($c$, $objetos$) $\impluego$ (enRango(mapa($s$), siguientePosición(posJugador($s$), $d$))))]%
+  {$res$ $\igobs$ nuevaSimulacion($m$, $p$, $objetos$)}%
+  [O$(copy(m) + m.alto \cdot m.ancho +|claves(objetos)|)$]
+  [inicia una nueva simulación.]
+  [$res$ es modificable.]
+
+  \InterfazFuncion{Mover}{\Inout{s}{sim}, \In{d}{dir}}{}
+  [$s_{0} \igobs s$ $\land$ enRango(mapa($s$), siguientePosición(posJugador($s$), $d$))]
+  {$s$ $\igobs$ mover($s_{0}$))}
+  [O(|$c$|)]
+  [se modifica la simulación desplazando al agente en la dirección $d$.]
+  
+  \InterfazFuncion{AgregarObjetivo}{\Inout{s}{sim}, \In{o}{objetivo}}{}
+  [$s_{0}$ \igobs $s$ $\land$ (colorObjeto($o$) $\in$ coloresObjetos($s$) $\land$ def?(colorDestino($o$), receptáculos(mapa($s$))))  ]
+  {$s$ \igobs agObjetivo($s_{0}$, $o$))}
+  [O($copy(o)$ + $|c|$)]
+  [si el objetivo es válido, agrega un objetivo a la simulación.]
+  [el objetivo $o$ se agrega por copia.]
+  
+  \InterfazFuncion{Mapa}{\In{s}{sim}}{mapa}
+  {($res$ $\igobs$ mapa($s$)}
+  [O(1)]
+  [devuelve el mapa de la simulación.]
+  [$res$ es modificable.]
+
+  \InterfazFuncion{PosiciónJugador}{\In{s}{sim}}{pos}
+  {$res$ \igobs posJugador($s, p$)}
+  [O(1)]
+  [devuelve la posición del jugador en la simulación.]
+
+  \InterfazFuncion{CantidadDeMovimientos}{\In{s}{sim}}{nat}
+  {$res$ $\igobs$ cantMovimientos($s$)}
+  [O(1)]
+  [devuelve la cantidad de movimientos del jugador.]
+ 
+  \InterfazFuncion{ObjetivosDisponibles}{\In{s}{sim}}{conj(objetivo)}
+  {$res$ \igobs objetivosDisponibles($s$)}
+  [O(1)]
+  [devuelve la cantidad de objetivos disponibles.]
+  [devuelve $res$ como una referencia no modificable.] 
+   
+  \InterfazFuncion{ObjetivosCompletados}{\In{s}{sim}}{nat}
+  {$res$ $\igobs$ $\#$ObjetivosRealizados($s$)}
+  [O(1)]
+  [devuelve la cantidad de objetivos completados.]
+    
+  \InterfazFuncion{ColoresObjetos}{\In{s}{sim}}{conj(color)}
+  {$res$ \igobs coloresObjetos($s$)}
+  [O($|c| \cdot Cardinal(res)$)]
+  [devuelve un conjunto con los colores de todos los objetos de la simulación.]
+  [devuelve en $res$ es una referencia no modificable.]    
+  
+  \InterfazFuncion{PosiciónObjeto}{\In{s}{sim}, \In{c}{color}}{pos}
+  [$c$ $\in$ coloresObjetos($s$)]
+  {$p$ \igobs posObjeto($s, c$))}
+  [O($|c|$)]
+  [si el objeto es de algún color válido, entonces devuelve la posición del objeto.]
+
+  \InterfazFuncion{SigPos}{\In{p}{pos}, \In{d}{dir}}{pos}
+  {$res$ = $\langle$$p_{1}$ + $\beta(d = DER)$ + $\beta(d = IZQ)$, $p_{2}$ + $\beta(d = ARRIBA)$ + $\beta(d = ABAJO)$$\rangle$}
+  [O(1)]
+  [devuelve la siguiente posición de p.]
+
+ \InterfazFuncion{PuedeMover?}{\In{p}{pos}, \In{d}{dir}, \In{m}{mapa}}{bool}
+  {$res$ \igobs (enRango($m$, SigPos($p$, $d$)) $\land$ (esPared?($m$, SigPos($p$, $d$)) $\impluego$ esRampa?($m$, $p$)))}
+  [O(1)]
+  [retorna true si y sólo si el jugador se puede mover.]
+
+\InterfazFuncion{HayObjeto?}{\In{s}{sim}, \In{p}{pos}}{bool}
+  {$res$ = true $\iff$ ($\exists c$: color) $c$ $\in$ ColoresObjetos($s$) $\land$ PosiciónObjeto($s$, $c$) = $p$}
+  [O(|$c$|)]
+  [retorna true si y sólo hay un objeto en la posición $p$.]
+
+
+\end{Interfaz}
+
+
+\newpage
+
+\begin{Representacion}
+
+\subsection{Representación} 
+
+\begin{Estructura}{sim}[estr]
+    \begin{Tupla}[estr]%
+      \tupItem[]{mapa}{mapa}%
+      \tupItem[\\]{posJugador}{pos}%
+      \tupItem[\\]{cantMovimientos}{nat}%
+      \tupItem[\\]{objetivosLista}{lista(objetivo)}
+      \tupItem[\\]{objetivosTrie}{diccTrie(color, diccTrie(color, itLista))}%
+      \tupItem[\\]{objetivosCompletados}{nat}%
+      \tupItem[\\]{coloresObjetos}{arreglo(arreglo(color))}%
+      \tupItem[\\]{posObjeto}{diccTrie(color, pos)}%
+    \end{Tupla}
+  \end{Estructura}
+
+
+  \begin{enumerate}
+      \item |e.coloresObjetos| = e.mapa.alto $\land$ (($\forall i: \mathbb Z$) 1 $\leq$ $i$ $\leq$ e.mapa.alto $\impluego$  |e.coloresObjetos[$i$]| = e.mapa.ancho)
+      
+      \item (1 $\leq$ e.posJugador$_{1}$ $\leq$ e.mapa.alto $\land$ 1 $\leq$ e.posJugador$_{2}$ $\leq$ e.mapa.ancho) $\yluego$ \\ 
+      e.coloresObjetos[e.posJugador$_{1}$][e.posJugador$_{2}$] = ' \ '
+      
+      \item e.cantMovimientos $\geq$ e.objetivosCompletados
+        
+      \item (($\forall p, p'$: pos) (1 $\leq p_{1}, p'_{1} \leq$ e.mapa.alto $\land$ 1 $\leq p_{2}, p'_{2} \leq$ e.mapa.ancho $\yluego$ e.coloresObjetos[$p_{1}$][$p_{2}$] $\neq$ '\ ' $\land$ $p \neq p'$) \\
+      $\impluego$ e.coloresObjetos[$p_{1}$][$p_{2}$] $\neq$ e.coloresObjetos[$p'_{1}$][$p'_{2}$])
+      
+      \item (($\forall c:$ color) def?($c$, e.objetivosTrie) $\impluego$ \\
+      ($\exists p$: pos) (1 $\leq p_{1} \leq$ e.mapa.alto $\land$ 1 $\leq p_{2} \leq$ e.mapa.ancho $\yluego$ e.coloresObjetos[$p_{1}$][$p_{2}$] = $c$)) 
+      
+      \item (($\forall c:$ color) def?($c$, e.posObjeto) $\impluego$ e.coloresObjetos[obtener($c$, e.posObjeto)$_{1}$][obtener($c$, e.posObjeto)$_{2}$] = $c$)
+      
+      \item (($\forall p:$ pos)(1 $\leq p_{1} \leq$ e.mapa.alto $\land$ 1 $\leq p_{2} \leq$ e.mapa.ancho $\land$
+      e.coloresObjetos[$p_{1}$][$p_{2}$] $\neq$ '\ ') $\impluego$ \\
+      (def?(e.coloresObjetos[$p_{1}$][$p_{2}$], e.posObjeto) $\yluego$ obtener(e.coloresObjetos[$p_{1}$][$p_{2}$], e.posObjeto) = $p$))
+      
+      \item (($\forall c, d$: color) (def?($c$, e.objetivosTrie) $\yluego$ def?($d$, obtener($c$, e.objetivosTrie))) $\impluego$ def?($d$, e.mapa.receptáculos))
+      
+      \item (($\forall i,j: \mathbb  Z$) (1 $\leq i,j \leq$ |e.objetivosLista| $\land$ $i \neq j$) $\impluego$ 
+      e.objetivosLista[$i$] $\neq$ e.objetivosLista[$j$])
+      
+      \item (($\forall o:$ objetivo) (def?(o.colorObjeto, e.objetivosTrie) $\land$ def?(o.casilleroDestino, obtener(o.colorObjeto, e.objetivosTrie))) \\ 
+      $\impluego$ ($o \in$ e.objetivosLista $\land$ Siguiente(obtener(o.casilleroDestino, obtener(o.colorObjeto, e.objetivosTrie))) = $o$))
+      
+      \item (($\forall o$: objetivo) $o \in$ e.objetivosLista $\impluego$ \\
+      (def?(o.casilleroDestino, obtener(o.colorObjeto, e.objetivosTrie)) $\yluego$ Siguiente(obtener(o.casilleroDestino, obtener(o.colorObjeto, e.objetivosTrie))) = $o$))
+  \end{enumerate}
+
+  \RepFc[$\widehat{estr}$]{(1) $\yluego$ (2) $\yluego$ (3) $\yluego$ (4) $\yluego$ (5) $\yluego$ (6) $\yluego$ (7) $\yluego$ (8) $\yluego$ (9) $\yluego$ (10) $\yluego$ (11)}
+
+  ~
+
+  \Abs[$\widehat{estr}$]{sim}[e]{$s$}
+  {e.mapa = mapa($s$) $\land$ e.posJugador = posJugador($s$) $\land$ e.cantMovimientos = cantMovimientos($s$) $\land$ 
+  (($\forall o:$ objetivo)  está?(e.objetivosLista, $o$) $\iff$ $o$ $\in$ objetivosDisponibles($s$)) $\land$ \\
+  e.objetivosCompletados = $\#$objetivosRealizados($s$) $\land$ \\
+  (($\forall o:$ objetivo) def?(o.casilleroDestino, obtener(o.colorObjeto, e.objetivosTrie)) $\iff$ \\ $o \in$ objetivosDisponibles($s$)) $\land$ \\
+  (($\forall c:$ color) $c$ $\neq$ '\ '  $\impluego$ (está?(e.coloresObjetos, $c$) $\iff$ $c$ $\in$ coloresObjetos($s$)) $\land$ \\ 
+  (($\forall c:$ color) $c$ $\in$ coloresObjetos($s$) $\impluego$ \\
+  ($\exists p:$ pos) (posObjeto($s, c$) = $p$ $\land$ e.coloresObjetos[$p_{1}$][$p_{2}$] = c)) $\land$ \\
+  (($\forall c:$ color) def?($c$, e.posObjeto) $\impluego$ obtener(c, e.posObjeto) = posObjeto($s$, $c$))}
+
+\end{Representacion}
+
+
+
+\begin{Algoritmos}
+  
+\subsection{Algoritmos}  
+  
+\begin{algorithm}[H]{\textbf{iNuevaSimulación}(\In{m}{mapa}, \In{p}{pos}, \In{objetos}{dicc(color, pos)}) $\to$ $res$ : sim}
+      \begin{algorithmic}[1]
+        \State $res.mapa \gets mapa$                                                                    \Comment $O(copy(m))$
+        \State $res.posJugador \gets p$                                                                 \Comment $O(1)$
+        \State $res.cantMovimientos \gets 0$                                                            \Comment $O(1)$
+        \State $res.objetivosLista \gets Vacia()$                                                       \Comment $O(1)$
+        \State $res.objetivosTrie \gets Vacio()$                                                        \Comment $O(1)$
+        \State $res.objetivosCompletados \gets 0$                                                       \Comment $O(1)$
+        \State $p' \gets \langle 1, 1 \rangle$                                                          \Comment $O(1)$
+        \While{$\pi_{1}(p') \leq$ m.alto}                                                               \Comment $O(m.alto)$
+            \While{$\pi_{2}(p') \leq$ m.ancho}                                                          \Comment $O(m.ancho)$
+                \State $res.coloresObjetos [\pi_{1}(p')][\pi_{2}(p')] \gets \ ' \ '$                    \Comment $O(1)$
+                \State $\pi_{2}(p') \gets \pi_{2}(p') + 1$                                              \Comment $O(1)$
+            \EndWhile
+            \State $\pi_{1}(p') \gets \pi_{1}(p') + 1$                                                  \Comment $O(1)$
+        \EndWhile
+        \State $itObjetos \gets CrearIt(objetos)$                                                       \Comment $O(1)$
+        \While{HaySiguiente($itObjetos$)}                                                               \Comment $O(|claves(objetos)|)$
+            \State $p'' \gets SiguienteSignificado(itObjetos) $                                         \Comment $O(1)$
+            \State $res.coloresObjetos [\pi_{1}(p'')][\pi_{2}(p'')] \gets SiguienteClave(itObjetos) $   \Comment $O(1)$
+            \State $Avanzar(itObjetos)$                                                                 \Comment $O(1)$
+        \EndWhile
+        \State $res.posObjeto \gets objetos$                                                            \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(copy(m) + m.alto \cdot m.ancho +|claves(objetos)|)$ 
+      \Statex \underline{Justificación}: Como hay un ciclo dentro de otro, donde uno se ejecuta m.alto veces y el otro m.ancho veces con operaciones internas O(1), la complejidad es O($m.alto \cdot m.ancho$). Además, como el iterador recorre todas las claves de $objetos$ se suma O($|claves(objetos)|$), más la copia del mapa. Por lo tanto, la complejidad total del algoritmo es O($copy(m) + m.alto \cdot m.ancho +|claves(objetos)|$).
+      \end{algorithmic}
+\end{algorithm}    
+  
+\begin{algorithm}[H]{\textbf{iMover}}{(\Inout{s}{sim}, \In{d}{dir})}
+      \begin{algorithmic}[1]
+        \State $pos\_actual \gets s.posJugador$                                                                                                 \Comment $O(1)$ 
+        \State $pos\_sig \gets SigPos(pos\_actual, d)$                                                                                          \Comment $O(1)$
+        \State $pos\_sig\_sig \gets SigPos(pos\_sig, d)$                                                                                        \Comment $O(1)$
+        \If{(PuedeMover?($pos\_actual$, $d$, s.mapa) $\land$ \\ 
+        (HayObjeto?($s$, $pos\_sig$) $\rightarrow$ (PuedeMover?($pos\_sig$, $d$, s.mapa) $\land$ $\neg$HayObjeto?($s$, $pos\_sig\_sig$))))}     \Comment $O(|c|)$
+        \State $col\_obj\_pos\_sig \gets s.coloresObjetos[\pi_{1}(pos\_sig)][\pi_{2}(pos\_sig)]$                                                \Comment $O(1)$
+            \If{Definido?(s.objetivosTrie, $col\_obj\_pos\_sig$)}                                                                               \Comment $O(|c|)$                       
+                \State $casilleros\_dest \gets Significado(s.objetivosTrie, \ col\_obj\_pos\_sig)$                                              \Comment $O(|c|)$
+                \State $color\_cas\_des \gets Significado(s.mapa.colorDestino, \ pos\_sig\_sig)$                                                \Comment $O(|c|)$
+                \If {Definido?($casilleros\_dest, \ color\_cas\_des$)}                                                                          \Comment $O(|c|)$  
+                    \State $s.objetivosCompletados \gets s.objetivosCompletados + 1$                                                            \Comment $O(1)$ 
+                    \State $itLista \gets Significado(casilleros\_dest, \ color\_cas\_des)$                                                     \Comment $O(|c|)$
+                    \State $EliminarSiguiente(itLista)$                                                                                         \Comment $O(1)$
+                    \If{$\#$Claves($casilleros\_dest$) $>$ 1}                                                                                   \Comment $O(1)$
+                        \State $Borrar(casilleros\_dest, \ color\_cas\_des)$                                                                    \Comment $O(|c|)$
+                    \Else
+                        \State $Borrar(s.ObjetivosTrie, \ col\_obj\_pos\_sig)$                                                                  \Comment $O(|c|)$
+                    \EndIf
+                \EndIf       
+                \State $s.coloresObjetos[\pi_{1}(pos\_sig)][\pi_{2}(pos\_sig)] \gets \ ' \ '$                                                   \Comment $O(1)$
+                \State $s.coloresObjetos[\pi_{1}(pos\_sig\_sig)][\pi_{2}(pos\_sig\_sig)] \gets col\_obj\_pos\_sig$                              \Comment $O(1)$
+                \State $Definir(s.posObjeto, pos\_sig\_sig,\ col\_obj\_pos\_sig)$                                                               \Comment $O(|c|)$
+                \State $Borrar(s.posObjeto,\ pos\_sig)$                                                                                         \Comment $O(|c|)$
+            \EndIf
+            \State $s.posJugador \gets SigPos(pos\_actual, d)$                                                                                  \Comment $O(1)$
+        \EndIf
+        \State $s.cantMovimientos \gets s.cantMovimientos + 1$                                                                                  \Comment $O(1)$
+
+      \medskip
+    
+      \Statex \underline{Complejidad}: $O(|c|)$
+      \Statex \underline{Justificación}: Como las funciones Definido?, Definir, Borrar y Significado tienen complejidad O(|$c$|) en la implementación usada, las otras operaciones tienen complejidad O(1) y no hay ningún ciclo, la complejidad total del algoritmo es O(|$c$|).
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iAgregarObjetivo}(\Inout{s}{sim}, \In{o}{objetivo})}
+      \begin{algorithmic}[1]
+        \If {$\neg$Definido?(s.ObjetivosTrie, o.colorObjeto)}                                       \Comment $O(|c|)$
+            \State $casilleros\_destino \gets Definir(s.objetivosTrie, o.colorObjeto, Vacio())$     \Comment $O(|c|)$
+            \State $itLista \gets AgregarAdelante(s.objetivosLista, o)$                             \Comment $O(copy(o))$
+            \State $Definir(casilleros\_destino, o.casilleroDestino, itLista)$                      \Comment $O(|c|)$
+        \Else
+            \State $casilleros\_destino \gets Obtener(s.objetivosTrie, o.colorObjeto, Vacio())$     \Comment $O(|c|)$
+            \If {$\neg$Definido?($casilleros\_destino$, o.casilleroDestino)}                        \Comment $O(|c|)$
+                \State $itLista \gets AgregarAdelante(s.objetivosLista, o)$                         \Comment $O(copy(o))$
+                \State $Definir(casilleros\_destino, o.casilleroDestino, itLista)$                  \Comment $O(|c|)$
+            \EndIf
+        \EndIf
+      \medskip
+      \Statex \underline{Complejidad}:  $O(copy(o)+|c|)$
+      \Statex \underline{Justificación}: Se realiza la copia del objetivo $o$ y las demás operaciones son O(|$c$|). Por lo tanto, como no hay ningún ciclo, la complejidad total del algoritmo es O($copy(o) + |c|$).
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iMapa}(\In{s}{sim}) $\to$ $res$ : mapa}
+      \begin{algorithmic}[1]
+       \State $res \gets s.mapa$   \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iPosiciónJugador}(\In{s}{sim}) $\to$ $res$ : pos}
+      \begin{algorithmic}[1]
+       \State $res \gets s.posJugador$   \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iCantidadDeMovimientos}(\In{s}{sim}) $\to$ $res$ : nat}
+      \begin{algorithmic}[1]
+       \State $res \gets s.cantMovimientos$   \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iObjetivosDisponibles}(\In{s}{sim}) $\to$ $res$ : conj(objetivos)}
+      \begin{algorithmic}[1]
+       \State $res \gets s.objetivosLista$   \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iObjetivosCompletados}(\In{s}{sim}) $\to$ $res$ : nat}
+      \begin{algorithmic}[1]
+       \State $res \gets s.objetivosCompletados$   \Comment $O(1)$
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iColoresObjetos}(\In{s}{sim}) $\to$ $res$ : conj(color)}
+      \begin{algorithmic}[1]
+      \State $res \gets claves(s.posObjeto)$      \Comment $O(|c|\cdot |claves(s.posObjeto)|)$  
+       
+      \medskip
+      \Statex \underline{Complejidad}: $O(|c|\cdot |claves(s.posObjeto)|)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iPosiciónObjeto}(\In{s}{sim}, \In{c}{color}) $\to$ $res$ : pos}
+      \begin{algorithmic}[1]
+       \State $res \gets obtener(c, s.posObjeto)$   \Comment $O(|c|)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(|c|)$
+      \end{algorithmic}
+\end{algorithm} 
+
+
+\begin{algorithm}[H]{\textbf{iSigPos}(\In{p}{pos}, \In{d}{dir}) $\to$ $res$ : pos}
+      \begin{algorithmic}[1]
+        \If {$ d = arriba $}                                                        \Comment $O(1)$                 
+            \State $res \gets \langle \pi_{1}(p) + 1, \pi_{2}(p) \rangle $          \Comment $O(1)$  
+        \EndIf 
+        \If {$ d = derecha $}                                                       \Comment $O(1)$
+            \State $res \gets \langle \pi_{1}(p), \pi_{2}(p) + 1 \rangle $          \Comment $O(1)$
+        \EndIf 
+        \If {$ d = abajo $}                                                         \Comment $O(1)$  
+            \State $res \gets \langle \pi_{1}(p) - 1, \pi_{2}(p) \rangle $          \Comment $O(1)$
+        \EndIf
+        \If {$ d = izquierda $}                                                     \Comment $O(1)$
+            \State $res \gets \langle \pi_{1}(p), \pi_{2}(p) - 1 \rangle $          \Comment $O(1)$
+        \EndIf   
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+
+\begin{algorithm}[H]{\textbf{iPuedeMover?}(\In{p}{pos}, \In{d}{dir}, \In{m}{mapa}) $\to$ $res$ : bool}
+      \begin{algorithmic}[1]
+       \State $res \gets (enRango(m, SigPos(p, d)) \land (esPared?(m, SigPos(p, d)) \rightarrow esRampa?(m, p)))$    \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm} 
+
+\begin{algorithm}[H]{\textbf{iHayObjeto?}(\In{s}{sim}, \In{p}{pos} $\to$ $res$ : bool)}
+      \begin{algorithmic}[1]
+       \State $res \gets Definido?(s.coloresObjetos[\pi_{1}(p)][\pi_{2}(p)], s.posObjeto)$ \Comment $O(|s.coloresObjetos[\pi_{1}(p)][\pi_{2}(p)]| = |c|)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(|c|)$
+      \end{algorithmic}
+\end{algorithm} 
+
+  
+\end{Algoritmos}
+
+\newpage
+
+\section{Módulo Mapa}
+
+
+\begin{Interfaz}
+
+\subsection{Interfaz}
+
+  \textbf{se explica con}: \tadNombre{Mapa}.
+
+  \textbf{géneros}: \TipoVariable{mapa}.
+
+  \InterfazFuncion{NuevoMapa}{\In{alto}{nat}, \In{ancho}{nat}, \In{rs}{dicc(color, pos)}}{mapa}%
+  [(($\forall c$: color) def?($c$, $rs$) $\impluego$ (1 $\leq \pi_{1}$(obtener($c$, $rs$)) $\leq ancho$ $\land$ 1 $\leq \pi_{2}$(obtener($c$, $rs$)) $\leq alto$)) $\land$ \\
+  (($\forall c_{1},c_{2}$: color)(def?($c_{1}, rs$) $\land$ def?($c_{2}, rs$) $\land$ $c_{1} \neq c_{2}$) $\impluego$ obtener($c_{1}, rs$) $\neq$ obtener($c_{2}, rs$))]
+  {$res$ $\igobs$ nuevoMapa($alto$, $ancho$, $rs$)}%
+  [O$(alto \cdot ancho + |claves(rs)| \cdot |c|)$]%
+  [inicia un nuevo mapa.]%
+  [retorna $res$ como una referencia no modificable.]
+  
+
+  \InterfazFuncion{AgregarPared}{\Inout{m}{mapa}, \In{p}{pos}}{}
+  [$m \igobs m_{0}$ $\land$ (enRango($m_{0}, p$) $\yluego$ esPiso?($m_{0}, p$) $\land$ \\
+  (($\forall p'$: pos)(enRango($m_{0}, p'$) $\yluego$ dist($p, p'$) = 1 $\land$ esRampa?($m_{0}, p'$)) $\impluego$ \\ (($\exists p''$: pos)($p \neq p$'' $\land$ enRango($m_{0}, p''$) $\yluego$ dist($p', p''$) = 1 $\land$ esPiso?($m_{0}, p''$)))))]
+  {$m$ $\igobs$ agregarPared($m_{0}, p'$)}
+  [O(1)]
+  [agrega una pared en el mapa en la posición p.]
+  
+  
+
+  \InterfazFuncion{agregarRampa}{\Inout{m}{mapa}, \In{p}{pos}}{}
+  [$m \igobs m_{0}$ $\land$ (enRango($m_{0}, p$) $\yluego$ esPiso?($m_{0}, p$) $\land$ \\
+  (($\exists p'$: pos) enRango($m_{0}, p'$) $\yluego$ dist($p, p'$) = 1 $\land$ esPared?($m_{0}, p'$)) $\land$ \\
+  (($\exists p'$: pos) enRango($m_{0}, p''$) $\yluego$ dist($p', p''$) = 1 $\land$ esPiso?($m_{0}, p''$)) $\land$ \\ 
+  (($\forall p'$: pos) (enRango($m_{0}, p'$) $\yluego$ dist($p, p'$) = 1 $\land$ esRampa?($m_{0}, p'$)) $\impluego$ \\ (($\exists p''$: pos) $p \neq p$'' $\land$ enRango($m_{0}, p''$) $\yluego$ dist($p', p''$) = 1 $\land$ esPiso?($m_{0}, p''$))))]
+  {$m$ $\igobs$ agregarRampa($m_{0}, p$)}
+  [O(1)]
+  [agrega una rampa al mapa en la posición $p$.]
+  
+
+  \InterfazFuncion{Ancho}{\In{m}{mapa}}{nat}
+  {$res \igobs$ ancho($m$)}
+  [O(1)]
+  [devuelve el ancho del mapa.]
+ 
+
+  \InterfazFuncion{Alto}{\In{m}{mapa}}{nat}
+  {$res \igobs$ alto($m$)}
+  [O(1)]
+  [devuelve el alto del mapa.]
+ 
+
+  \InterfazFuncion{Receptáculos}{\In{m}{mapa}}{dicc(color, pos)}
+  {$res \igobs$ receptáculos($m$)}
+  [O(1)]
+  [devuelve un diccionario con los colores del mapa como claves y con las posiciones como significado]
+  []
+
+  \InterfazFuncion{EsPared?}{\In{m}{mapa}, \In{p}{pos}}{bool}
+  [enRango($m, p$)]
+  {$res$ $\igobs$ esPared?($m$, $p$)}
+  [O(1)]
+  [retorna true si y sólo si hay una pared en la posición $p$.]
+  
+  
+  \InterfazFuncion{EsRampa?}{\In{m}{mapa}, \In{p}{pos}}{bool}
+  [enRango($m, p$)]
+  {$res$ $\igobs$ esRampa?($m$, $p$)}
+  [O(1)]
+  [retorna true si y sólo si hay una rampa en la posición $p$.]
+  
+  
+  \InterfazFuncion{EsPiso?}{\In{m}{mapa}, \In{p}{pos}}{bool}
+  [enRango($m, p$)]
+  {$res$ $\igobs$ esPiso?($m$, $p$)}
+  [O(1)]
+  [retorna true si y sólo si hay un piso en la posición $p$.]
+ 
+  
+  \InterfazFuncion{enRango}{\In{m}{mapa}, \In{p}{pos}}{bool}
+  {$res$ $\igobs$ enRango($m$, $p$)}
+  [O(1)]
+  [retorna true si y sólo si la posición $p$ se encuentra en el mapa.]
+  
+  
+  \InterfazFuncion{Distancia}{\In{p}{pos}, \In{p'}{pos}}{nat}
+  {$res$ $\igobs$ dist($p$, $p'$)}
+  [O(1)]
+  [devuelve la distancia entre dos posiciones.]
+  
+  
+
+\end{Interfaz}
+
+\newpage
+
+\begin{Representacion}
+
+\subsection{Representación} 
+
+\begin{Estructura}{mapa}[estr]
+    \begin{Tupla}[estr]%
+      \tupItem[]{alto}{nat}%
+      \tupItem[\\]{ancho}{nat}%
+      \tupItem[\\]{receptáculos}{diccTrie(color, pos)}%
+      \tupItem[\\]{colorDestino}{diccTrie(pos, color)}%
+      \tupItem[\\]{superficies}{arreglo(arreglo(tupla $\langle$esPared?: bool, esRampa?: bool,\\ esPiso?: bool$\rangle$))}%
+    \end{Tupla}
+  \end{Estructura}
+  
+  \begin{enumerate}
+      \item (($\forall c$: color) def?($c$, e.receptáculos) $\impluego$ (1 $\leq$ obtener($c$,  e.receptáculos)$_{1}$ $\leq$ e.alto $\land$ \\ 
+      1 $\leq$ obtener($c$, e.receptáculos)$_{2}$ $\leq$ e.ancho))
+            
+      \item |e.superficies| = e.alto $\land$ (($\forall i: \mathbb Z$) 1 $\leq$ $i$ $\leq$ e.alto $\impluego$  |e.superficies[$i$]| = e.ancho)
+      
+      \item (($\forall c, c'$: color) def?($c$, e.receptáculos) $\land$ def?($c'$, e.receptáculos) $\land$ $c \neq c'$ $\impluego$ \\
+        obtener($c$, e.receptáculos) $\neq$ obtener($c'$, e.receptáculos))
+        
+      \item (($\forall c$: color) def?($c$, e.receptáculos) $\impluego$ (def?(obtener($c$, e.receptáculos), e.colorDestino) $\yluego$ \\
+            obtener(obtener($c$, e.receptáculos), e.colorDestino) = $c$))
+            
+      \item (($\forall p$: pos)(1 $\leq$ $p_{1}$ $\leq$ e.alto $\land$ 1 $\leq$ $p_{2}$ $\leq$ e.ancho) $\impluego$ \\
+            ((e.superficies[$p_{1}$][$p_{2}$].esPared? $\land$ $\neg$e.superficies[$p_{1}$][$p_{2}$].esRampa? $\land$ $\neg$e.superficies[$p_{1}$][$p_{2}$].esPiso?)$\lor$ \\
+            ($\neg$e.superficies[$p_{1}$][$p_{2}$].esPared? $\land$ e.superficies[$p_{1}$][$p_{2}$].esRampa? $\land$ $\neg$e.superficies[$p_{1}$][$p_{2}$].esPiso?) $\lor$ \\
+            ($\neg$e.superficies[$p_{1}$][$p_{2}$].esPared? $\land$ $\neg$e.superficies[$p_{1}$][$p_{2}$].esRampa? $\land$ e.superficies[$p_{1}$][$p_{2}$].esPiso?)))
+            
+      \item (($\forall p:$ pos) (1 $\leq$ $p_{1}$ $\leq$ e.alto $\land$ 1 $\leq$ $p_{2}$ $\leq$ e.ancho $\land$
+            e.superficies[$p_{1}$][$p_{2}$].esRampa?) $\impluego$ \\
+            ($\exists p', p''$: pos)($p_{1}$ - 1 $\leq p'_{1}, p''_{1} \leq p_{1}$ + 1 $\land$ $p_{2}$ - 1 $\leq p'_{2}, p''_{2} \leq p_{2}$ + 1 $\land$ \\ 
+            0 $\leq p'_{1}, p''_{1} \leq$ e.alto $\land$ 0 $\leq p'_{2}, p''_{2} \leq$ e.ancho $\land$
+            $\langle|p_{1} - p'_{1}|, |p_{2} - p'_{2}|\rangle$ $\neq$ $\langle$1, 1$\rangle$ $\land$ 
+            $\langle|p_{1} - p''_{1}|, |p_{2} - p''_{2}|\rangle$ $\neq$ $\langle$1, 1$\rangle$ $\land$ \\ 
+            $p' \neq p''$ $\yluego$ e.superficies[$p'_{1}$][$p'_{2}$].esPared $\land$ e.superficies[$p''_{1}$][$p''_{2}$].esPiso))
+  \end{enumerate}
+  
+  
+  \RepFc[$\widehat{estr}$]{(1) $\yluego$ (2) $\yluego$ (3) $\yluego$ (4) $\yluego$ (5) $\yluego$ (6)}
+
+  ~
+
+  \Abs[$\widehat{estr}$]{mapa}[e]{$m$}{e.ancho = ancho($m$) $\land$ e.alto = alto($m$) $\land$ e.receptáculos = receptáculos($m$) $\land$ \\
+  (($\forall p:$ pos) enRango($m, p$) $\impluego$ ((esPared?($m, p$) = true $\iff$ e.superficies[$p_{1}$][$p_{2}$].esPared?) $\land$ (esRampa?($m, p$) = true $\iff$ e.superficies[$p_{1}$][$p_{2}$].esRampa?)))}\mbox{}
+
+ 
+
+\end{Representacion}
+
+\newpage
+
+\begin{Algoritmos}
+  
+\medskip
+
+\subsection{Algoritmos}
+
+  
+\begin{algorithm}[H]{\textbf{iNuevoMapa}(\In{alto}{nat}, \In{ancho}{nat}, \In{rs}{dicc(color, pos)}) $\to$ $res$ : mapa}
+      \begin{algorithmic}[1]
+        \State $res.alto \gets alto$                                                                        \Comment $O(1)$
+        \State $res.ancho \gets ancho$                                                                      \Comment $O(1)$
+        \State $res.recept\acute{a}culos \gets rs$                                                          \Comment $O(1)$
+        \State $i \gets 1$                                                                                  \Comment $O(1)$
+        \State $j \gets 1$                                                                                  \Comment $O(1)$
+        \While{$i \leq$ res.alto}                                                                           \Comment $O(alto)$
+            \While{$j \leq$ res.ancho}                                                                      \Comment $O(ancho)$
+                \State $e.superficies[i][j].esPared? \gets false$                                           \Comment $O(1)$
+                \State $e.superficies[i][j].esRampa? \gets false$                                           \Comment $O(1)$
+                \State $e.superficies[i][j].esPiso? \gets true$                                             \Comment $O(1)$
+                \State $j \gets j+1$                                                                        \Comment $O(1)$
+            \EndWhile
+            \State $i \gets i+1$                                                                            \Comment $O(1)$
+        \EndWhile
+        \State $itDicc \gets CrearIt(rs)$                                                                   \Comment $O(1)$
+        \While{HaySiguiente?($itDicc$)}                                                                     \Comment $O(|claves(rs)|)$
+            \State $Definir(res.colorDestino, SiguienteSignificado(itDicc), SiguienteClave(itDicc))$        \Comment $O(|c|)$
+            \State $Avanzar(itDicc)$                                                                        \Comment $O(1)$    
+        \EndWhile
+      
+      \medskip
+      \Statex \underline{Complejidad}: $O(alto \cdot ancho + |claves(rs)| \cdot |c|)$
+      \Statex \underline{Justificación}: Como hay un ciclo dentro de otro, donde uno se ejecuta $alto$ veces y el otro $ancho$ veces con operaciones internas O(1), la complejidad es O($alto \cdot ancho$). Además, como el iterador recorre todas las claves de $rs$ con una operación interna O($|c|$), la complejidad total del algoritmo es O($alto \cdot ancho + |claves(rs)| \cdot |c|$).
+      \end{algorithmic}
+\end{algorithm}  
+  
+  
+\begin{algorithm}[H]{\textbf{iAgregarPared}(\Inout{m}{mapa}, \In{p}{pos})}
+      \begin{algorithmic}[1]
+       \State $m.superficies[\pi_{1}(p)][\pi_{2}(p)].esPared? \gets true$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}    
+  
+  
+\begin{algorithm}[H]{\textbf{iAgregarRampa}(\Inout{m}{mapa}, \In{p}{pos})}
+      \begin{algorithmic}[1]
+       \State $m.superficies[\pi_{1}(p)][\pi_{2}(p)].esRampa? \gets true$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}   
+  
+  
+\begin{algorithm}[H]{\textbf{iAncho}(\In{m}{mapa}) $\to$ $res$: nat}
+      \begin{algorithmic}[1]
+       \State $res \gets m.ancho$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}   
+
+\begin{algorithm}[H]{\textbf{iAlto}(\In{m}{mapa}) $\to$ $res$: nat}
+      \begin{algorithmic}[1]
+       \State $res \gets m.alto$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}    
+
+\begin{algorithm}[H]{\textbf{iReceptáculos}(\In{m}{mapa}) $\to$ $res$: dicc(color, pos)}
+      \begin{algorithmic}[1]
+       \State $res \gets m.recept\acute{a}culos$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}     
+  
+\begin{algorithm}[H]{\textbf{iEsPared?}(\In{m}{mapa}, \In{p}{pos}) $\to$ $res$: bool}
+      \begin{algorithmic}[1]
+       \State $res \gets m.superficies[\pi_{1}(p)][\pi_{2}(p)].esPared?$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}  
+
+\begin{algorithm}[H]{\textbf{iEsRampa?}(\In{m}{mapa}, \In{p}{pos}) $\to$ $res$: bool}
+      \begin{algorithmic}[1]
+       \State $res \gets m.superficies[\pi_{1}(p)][\pi_{2}(p)].esRampa?$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}  
+
+\begin{algorithm}[H]{\textbf{iEsPiso?}(\In{m}{mapa}, \In{p}{pos}) $\to$ $res$: bool}
+      \begin{algorithmic}[1]
+       \State $res \gets m.superficies[\pi_{1}(p)][\pi_{2}(p)].esPiso?$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}  
+
+\begin{algorithm}[H]{\textbf{iEnRango}(\In{m}{mapa}, \In{p}{pos}) $\to$ $res$: bool}
+      \begin{algorithmic}[1]
+       \State $res \gets (1 \leq \pi_{1}(p) \leq m.ancho \land 1 \leq \pi_{2}(p) \leq m.alto) $  \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}  
+
+  
+\begin{algorithm}[H]{\textbf{iDistancia}(\In{p}{pos}, \In{p'}{pos}) $\to$ $res$: nat}
+      \begin{algorithmic}[1]
+       \State $res \gets \sqrt{(\pi_{1}(p)-\pi_{1}(p'))^2+(\pi_{2}(p)-\pi_{2}(p'))^2} $         \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}   
+  
+\end{Algoritmos}
+
+ 
+\newpage 
+ 
+\section{Módulo Objetivo}
+
+\begin{Interfaz}
+
+\subsection{Interfaz}
+
+  \textbf{se explica con}: \tadNombre{Color, Bool}.
+
+  \textbf{géneros}: \TipoVariable{objetivo}.
+
+
+  \InterfazFuncion{NuevoObjetivo}{\In{c}{color}, \In{c'}{color}}{objetivo}%
+  {$res$ $\igobs$ nuevoObjetivo($c$, $c'$)}%
+  [O(1)]
+  [genera un nuevo objetivo.]
+  [devuelve $res$ como una referencia modificable.]
+
+  \InterfazFuncion{ColorObjeto}{\In{o}{objetivo}}{color}
+  {$res$ $\igobs$ colorObjeto($o$)}
+  [O(1)]
+  [devuelve el color del objeto del objetivo.]
+  [$res$ es modificable si y sólo si $o$ es modificable.]
+  
+  \InterfazFuncion{ColorDestino}{\In{o}{objetivo}}{color}
+  {$s$ \igobs colorDestino($s_{0}$, $o$)}
+  [O(1)]
+  [devuelve el color del casillero destino del objetivo.]
+  [$res$ es modificable si y sólo si $o$ es modificable.]
+  
+  \InterfazFuncion{Realizado?}{\In{s}{sim}, \In{o}{objetivo}}{bool}
+  [colorObjeto($o$) $\in$ coloresObjetos($s$) $\land$ def?(colorDestino($o$), receptáculos(mapa($s$)))]
+  {$res$ $\igobs$ realizado?($s, o$)}
+  [O($|c|$)]
+  [retorna true si y sólo si el objetivo está realizado.]
+
+  
+\end{Interfaz}
+
+
+\newpage
+
+\begin{Representacion}
+
+\subsection{Representación} 
+
+\begin{Estructura}{objetivo}[estr]
+    \begin{Tupla}[estr]%
+      \tupItem[]{colorObjeto}{string}%
+      \tupItem[]{\ colorDestino}{string}%
+    \end{Tupla}
+  \end{Estructura}
+
+\end{Representacion}
+
+
+
+  \RepFc[$\widehat{estr}$]{true}
+
+  ~
+
+  \Abs[$\widehat{estr}$]{objetivo}[e]{$o$}{e.colorObjeto = colorObjeto($o$) $\land$ e.colorDestino = colorDestino($o$)}
+
+
+\begin{Algoritmos}
+  
+\medskip
+
+\subsection{Algoritmos}
+
+  
+\begin{algorithm}[H]{\textbf{iNuevoObjetivo}(\In{c}{color}, \In{c'}{color}) $\to$ $res$ : objetivo}
+      \begin{algorithmic}[1]
+       \State $res.colorObjeto \gets c$     \Comment $O(1)$
+       \State $res.colorDestino \gets c'$   \Comment $O(1)$
+      
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \Statex \underline{Justificación}: $O(1)$ + $O(1)$ = $O(1)$
+      \end{algorithmic}
+\end{algorithm}  
+  
+  
+\begin{algorithm}[H]{\textbf{iColorObjeto}(\In{o}{objetivo}) $\to$ $res$ : color}
+      \begin{algorithmic}[1]
+       \State $res \gets o.ColorObjeto$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}    
+  
+  
+\begin{algorithm}[H]{\textbf{iColorDestino}(\In{o}{objetivo}) $\to$ $res$ : color}
+      \begin{algorithmic}[1]
+       \State $res \gets o.colorDestino$   \Comment $O(1)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(1)$
+      \end{algorithmic}
+\end{algorithm}   
+  
+  
+\begin{algorithm}[H]{\textbf{iRealizado?}(\In{s}{sim}, \In{o}{objetivo}) $\to$ $res$: bool}
+      \begin{algorithmic}[1]
+       \State $res \gets obtener(ColorDestino(o), Recept\acute{a}culos(mapa(s))) = Posici\acute{o}nObjeto(ColorObjeto(o))$   \Comment $O(|c|)$
+      \medskip
+      \Statex \underline{Complejidad}: $O(|c|)$
+      \end{algorithmic}
+\end{algorithm}  
+
+
+\end{Algoritmos}
+
+\end{document}
