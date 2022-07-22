@@ -1,0 +1,267 @@
+\documentclass[10pt, a4paper]{article}
+\usepackage[paper=a4paper, left=1.5cm, right=1.5cm, bottom=1.5cm, top=3.5cm]{geometry}
+\usepackage[latin1]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{indentfirst}
+\usepackage{fancyhdr}
+\usepackage{latexsym}
+\usepackage{lastpage}
+\usepackage{aed2-symb,aed2-itef,aed2-tad}
+\usepackage[colorlinks=true, linkcolor=blue]{hyperref}
+\usepackage{calc}
+
+\newcommand{\f}[1]{\text{#1}}
+\renewcommand{\paratodo}[2]{$\forall~#2$: #1}
+
+\sloppy
+
+\hypersetup{%
+ % Para que el PDF se abra a página completa.
+ pdfstartview= {FitH \hypercalcbp{\paperheight-\topmargin-1in-\headheight}},
+ pdfauthor={Cátedra de Algoritmos y Estructuras de Datos II - DC - UBA},
+ pdfkeywords={TADs básicos},
+ pdfsubject={TP Algo2landia}
+}
+
+\parskip=5pt % 10pt es el tamaño de fuente
+
+% Pongo en 0 la distancia extra entre ítemes.
+\let\olditemize\itemize
+\def\itemize{\olditemize\itemsep=0pt}
+
+% Acomodo fancyhdr.
+\pagestyle{fancy}
+\thispagestyle{fancy}
+\addtolength{\headheight}{1pt}
+\lhead{Algoritmos y Estructuras de Datos II}
+%\rhead{$1^{\mathrm{er}}$ cuatrimestre de 2019}
+\rhead{}
+\cfoot{\thepage /\pageref{LastPage}}
+\renewcommand{\footrulewidth}{0.4pt}
+
+\author{Algoritmos y Estructuras de Datos II, DC, UBA.}
+\date{}
+\title{TP Algo2landia}
+
+\begin{document}
+
+
+\maketitle
+
+\section{TAD \tadNombre{Algo2landia}}
+
+$\\$
+\textsc{\textbf{TAD}  Objetivo Es Tupla(Tupla(Color $\times$ Casillero) $\times$  Tupla(Color $\times$ Casillero)}\\ 
+\textsc{\textbf{TAD} Color  Es  String} \\
+\textsc{\textbf{TAD} Casillero Es Tupla(Nat $\times$ Nat)}
+
+\begin{tad}{Algo2landia}
+
+
+\tadIgualdadObservacional{al_{1}}{al_{2}}{algo2landia}{grilla($al_{1}$) $\igobs$ grilla($al_{2}$) $\land$ \\ ($\forall a$: agente) (posici\'on($a$, $al_{1}$) $\igobs$ \\ posici\'on($a$, $al_{2}$) $\land$ \\ cantMovimientos($a$, $al_{1}$) $\igobs$ \\ cantMovimientos($a$, $al_{2}$) $\land$ \\ objetivosDisponibles($a$, $al_{1}$) $\igobs$ \\ objetivosDisponibles($a$, $al_{2}$) $\land$ \\ objetivosCompletados($a$, $al_{1}$) $\igobs$ \\ objetivosCompletados($a$, $al_{2}$)) }
+
+
+
+\tadGeneros{algo2landia}
+\tadExporta{algo2landia, generadores, observadores, sePuedeMover?, esFinalObjetivo?}
+\tadUsa{\tadNombre{direcci\'on}, \tadNombre{agente}, \tadNombre{grilla}, \tadNombre{conj(objetivo)}}
+
+
+
+\tadAlinearFunciones{objetivosCompletados}{agente, algo2landia}
+
+
+\tadObservadores
+\tadOperacion{grilla}{algo2landia}{grilla}{}
+\tadOperacion{posici\'on}{agente, algo2landia}{casillero}{}
+\tadOperacion{cantMovimientos}{agente, algo2landia}{nat}{}
+\tadOperacion{objetivosDisponibles}{agente, algo2landia}{conj(objetivo)}{}
+\tadOperacion{\#objetivosCompletados}{agente, algo2landia}{nat}{}
+
+
+\tadAlinearFunciones{agregarObjetivo}{agente \ $a$, algo2landia \ $al$, direccion \ $d$}
+
+\tadGeneradores
+\tadOperacion{comenzar}{agente, conj(objetivo), grilla}{algo2landia}{}
+\tadOperacion{mover}{agente \ $a$, direccion \ $d$, algo2landia \ $al$}{algo2landia}{haySiguienteCasillero?(grilla($al$), posici\'on($a$, $al$), $d$)}
+\tadOperacion{agregarObjetivo}{objetivo \ $ob$, agente, algo2landia \ $al$}{algo2landia}{hayObjeto?($\pi_{2}(\pi_{1}(ob))$, grilla(al)) $\yluego$ $\pi_{1}(\pi_{1}(ob))$ = $o$ $\land$ $\pi_{1}(\pi_{2}(ob))$ = $c$}
+
+
+
+%\tadAlinearFunciones{}{}
+
+\tadOtrasOperaciones
+
+\tadOperacion{sePuedeMover?}{agente, direcci\'on, algo2landia}{bool}{}
+\tadOperacion{esFinalObjetivo?}{agente, direcci\'on, algo2landia}{bool}{}
+
+
+\tadAxiomas[\paratodo{direcci\'on}{d},\paratodo{agente}{a, a'},\paratodo{objetivo}{ob} ,\paratodo{conj(objetivo)}{co}, \paratodo{grilla}{g}, \paratodo{algo2landia}{al}]
+
+\tadAlinearAxiomas{\#objetivosCompletados($a$, agregarObjetivo($ob$, $a$, $al$))}{}
+
+\tadAxioma{grilla(comenzar($a$, $co$, $g$))}{$g$}
+\tadAxioma{grilla(mover($a$, $d$, $al$))}{grilla($al$)}
+\tadAxioma{posici\'on($a$, comenzar($a'$, $co$, $g$))}{posici\'on($a$, $al$)}
+\tadAxioma{posici\'on($a$, mover($a'$, $d$, $al$))}{ 
+$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ \\
+    \hspace*{0.3cm} $\textbf{if}$ sePuedeMover?($a$, $d$, $al$) $\textbf{then}$ \\
+        \hspace*{0.6cm} siguienteCasillero(posici\'on($a$, $al$), $al$) \\  
+    \hspace*{0.3cm} $\textbf{else}$ \\
+        \hspace*{0.6cm} posici\'on($a$, $al$) \\
+$\textbf{else}$ \\
+        \hspace*{0.3cm} posici\'on($a$, $al$) \\
+    \hspace*{0.3cm} $\textbf{fi}$ \\
+$\textbf{fi}$}
+\tadAxioma{cantMovimientos($a$, comenzar($a'$, $g$))}{$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ 0 $\textbf{else}$ cantMovimientos($a$, $al$) $\textbf{fi}$}
+\tadAxioma{cantMovimientos($a$, mover($a'$, $d$, $al$))}{$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ cantMovimientos($a$, $al$) + 1 $\textbf{else}$ cantMovimientos($a$, $al$) $\textbf{fi}$}
+\tadAxioma{objetivosDisponibles($a$, comenzar($a'$, $co$, $g$))}{$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ $co$ $\textbf{else}$ objetivosDisponibles($a$, $al$)}
+\tadAxioma{objetivosDiponibles($a$, mover($a'$, $d$, $al$))}{
+    $\textbf{if}$ $a$ = $a'$ $\textbf{then}$ \\
+		 \hspace*{0.3cm} $\textbf{if}$ sePuedeMover?($a$, $d$, $al$) $\land$ \\ 
+         \hspace*{0.3cm} esFinalObjetivo?($a$, $d$, $al$) $\textbf{then}$ \\
+			    \hspace*{0.6cm}	sinUno(objetivosDiponibles($a$, $al$)) \\
+		\hspace*{0.3cm} $\textbf{else}$ \\
+			\hspace*{0.6cm}	objetivosDiponibles($a$, $al$) \\
+		\hspace*{0.3cm} $\textbf{fi}$ \\
+	$\textbf{else}$ \\
+		\hspace*{0.3cm} objetivosDiponibles($a$, $al$) \\
+	$\textbf{fi}$
+}
+\tadAxioma{objetivosDisponibles($a$, agregarObjetivo($ob$, $a'$, $al$))}{$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ Ag($ob$, objetivosDisponibles($a$, $al$)) $\textbf{else}$ objetivosDisponibles($a$, $al$)}
+\tadAxioma{\#objetivosCompletados(a, comenzar($a'$, $co$, $g$))}{$\textbf{if}$ $a$ = $a'$ $\textbf{then}$ 0 $\textbf{else}$ objetivosCompletados($a$, $al$)}
+\tadAxioma{\#objetivosCompletados($a$, mover($a'$, $d$, $al$))}{ 	
+    $\textbf{if}$ $a$ = $a'$ $\textbf{then}$ \\
+		\hspace*{0.3cm} $\textbf{if}$ sePuedeMover?($a$, $d$, $al$) $\land$ \\ 
+        \hspace*{0.3cm} esFinalObjetivo?($a$, $d$, $al$) $\textbf{then}$ \\
+			    \hspace*{0.6cm}	1 + \#objetivosCompletados($a$, $al$) \\
+		\hspace*{0.3cm} $\textbf{else}$ \\
+			    \hspace*{0.6cm}	\#objetivosCompletados($a$, $al$) \\
+		\hspace*{0.3cm} $\textbf{fi}$ \\
+	$\textbf{else}$ \\
+		\hspace*{0.3cm} \#objetivosCompletados($a$, $al$) \\
+	$\textbf{fi}$
+}
+\tadAxioma{\#objetivosCompletados($a$, agregarObjetivo($ob$, $a'$, $al$))}{\#ObjetivosCompletados($a$, $al$)}
+
+\tadAxioma{sePuedeMover?($a$, $d$, $al$)}{(esPiso?(grilla($al$), posici\'on($a$, $al$)) $\land$ \\ 
+esElevaci\'on?(siguienteCasillero(posici\'on($a$, $al$), \\ 
+$d$))) $\lor$ \\
+(hayObjeto?(posici\'on($a$, $al$), grilla($al$)) $\land$ \\ 
+hayObjeto?(siguienteCasillero(posici\'on($a$, $al$), \\
+$d$), grilla($al$)))}
+
+\tadAxioma{esFinalObjetivo?($a$, $d$, $al$)}{hayObjeto?(posici\'on($a$, $al$), grilla($al$)) $\yluego$ \\ 
+colorObjeto(posici\'on($a$, $al$), grilla($al$)) = \\ 
+$\pi_{1}$($\pi_{1}$(dameUno(objetivosDiponibles($a$, $al$)), \\ 
+grilla($al$))) $\land$ \\ 
+$\pi_{1}$($\pi_{2}$(dameUno(objetivosDiponibles($a$, $al$)))) = \\  colorCasillero(siguienteCasillero(posicion($a$, \\ 
+$al$), $d$))}
+
+\end{tad}
+
+\newpage
+
+\section{TAD \tadNombre{Grilla}}
+
+\begin{tad}{Grilla}
+
+\tadIgualdadObservacional{g_{1}}{g_{2}}{grilla}{alto($g_{1}$) $\igobs$ alto($g_{2}$) $\land$ ancho($g_{1}$) $\igobs$ ancho($g_{2}$) $\land$ pisos($g_{1}$) $\igobs$ pisos($g_{2}$) $\land$ rampas($g_{1}$) $\igobs$ rampas($g_{2}$) $\land$ elevaciones($g_{1}$) $\igobs$ elevaciones($g_{2}$) $\land$ casillerosColoridos($g_{1}$) $\igobs$ casillerosColoridos($g_{2}$) $\land$ casillerosConObjetos($g_{1}$) $\igobs$ casillerosConObjetos($g_{2}$)}
+
+
+\tadGeneros{grilla}
+\tadExporta{grilla, generadores, observadores, esCasilleroV\'alido?, haySiguienteCasillero?, siguienteCasillero, esPiso?, esRampa?, esElevaci\'on?, hayObjeto?, tieneColorCas?, colorObjeto, colorCasillero}
+\tadUsa{\tadNombre{bool}, \tadNombre{nat}, \tadNombre{casillero}, \tadNombre{direcci\'on}, \tadNombre{color}, \tadNombre{conj(casillero)}, \tadNombre{dicc(casillero, color)}}
+
+
+
+\tadAlinearFunciones{casillerosConObjetos}{grilla}
+
+
+\tadObservadores
+\tadOperacion{alto}{grilla}{nat}{}
+\tadOperacion{ancho}{grilla}{nat}{}
+\tadOperacion{pisos}{grilla}{conj(casillero)}{}
+\tadOperacion{rampas}{grilla}{conj(casillero)}{}
+\tadOperacion{elevaciones}{grilla}{conj(casillero)}{}
+\tadOperacion{casillerosColoridos}{grilla}{dicc(casillero, color)}{}
+\tadOperacion{casillerosConObjetos}{grilla}{dicc(casillero, color)}{}
+
+
+\tadAlinearFunciones{crear}{conj(casillero) \ $p$, conj(casillero) \ $r$, conj(casillero) \ $e$, {dicc(casillero, color)} \ $cc$, {dicc(casillero, color)} \ $co$ , nat \ $alt$, nat \ $anch$}
+
+\tadGeneradores
+\tadOperacion{crear}{conj(casillero) \ $p$, conj(casillero) \ $r$, conj(casillero) \ $e$,{dicc(casillero, color)} \ $cc$,{dicc(casillero, color)} \ $co$ $\\$, nat \ $alt$, nat \ $anch$}{grilla}{
+($alt$ $>$ 0 $\land$ $anch$ $>$ 0 $\land$ $p$ $\cap$ $r$ = $\emptyset$ $\land$ $p$ $\cap$ $e$ = $\emptyset$ $\land$ $r$ $\cap$ $e$ = $\emptyset$) 
+$\land$ \\
+($\#p$ + $\#r$ + $\#e$ = $alt$ $\times$ $anch$) 
+$\yluego$ \\
+($\forall$ $r_i$: casillero)($r_i$ $\in$ $r$ $\rightarrow_{L}$ ($\exists$ $d$: direcci\'on)($\exists$ $p_i$: casillero)($p_i$ $\in$ $p$ $\land_{L}$ siguienteCasillero($r_i$, $d$) = $p_i$) $\land$ ($\exists d'$: direcci\'on)($\exists$ $e_i$: casillero)($e_i$ $\in$ $e$ $\land_{L}$ siguienteCasillero($r_i$, $d'$) = $e_i$)) 
+$\land$ \\
+claves($cc$) $\subseteq$ ($p$ $\cup$ $r$ $\cup$ $e$) $\land$ claves($co$) $\subseteq$ ($p$ $\cup$ $r$ $\cup$ $e$)
+$\land$ \\
+($\forall$ $c_{i}$, $c_{j}$: casillero)((($c_{i}$ $\neq$ $c_{j}$ $\land$ ($c_{i}$ $\in$ claves($cc$)  $\land$ $c_{j}$ $\in$ claves($cc$))) $\rightarrow_{L}$ obtener$(c_{i}, cc)$ $\neq$ obtener$(c_{j}, cc)$) $\land$ ($\forall$ $c_{k}$, $c_{l}$: casillero)((($c_{l}$ $\neq$ $c_{k}$ $\land$ ($c_{i}$ $\in$ claves($co$)  $\land$ $c_{j}$ $\in$ claves($co$))) $\rightarrow_{L}$ obtener$(c_{k}, co)$ $\neq$ obtener$(c_{l}, co)$ 
+}
+
+
+
+\tadAlinearFunciones{haySiguienteCasillero?}{grilla \ $g$, casillero \ $c$, direccion}
+
+\tadOtrasOperaciones
+\tadOperacion{esCasilleroV\'alido?}{casillero, grilla}{bool}{}
+\tadOperacion{haySiguienteCasillero?}{casillero \ $c$, direcci\'on, grilla \ $g$}{bool}{esCasilleroV\'alido?($c$, $g$)}
+\tadOperacion{siguienteCasillero}{casillero \ $c$, direcci\'on \ $d$}{casillero}{($\forall$ $g$: grilla)(esCasilleroV\'alido($c$, $g$) $\rightarrow_{L}$ haySiguienteCasillero?($c$, $d$, $g$))}
+\tadOperacion{esPiso?}{casillero, grilla}{bool}{}
+\tadOperacion{esRampa?}{casillero, grilla}{bool}{}
+\tadOperacion{esElevaci\'on?}{casillero, grilla}{bool}{}
+\tadOperacion{hayObjeto?}{casillero, grilla}{bool}{}
+\tadOperacion{tieneColorCas?}{casillero, grilla}{bool}{}
+\tadOperacion{colorObjeto}{casillero \ $c$, grilla \ $g$}{color}{hayObjeto?($c$, $g$)}
+\tadOperacion{colorCasillero}{casillero \ $c$, grilla \ $g$}{color}{tieneColorCas?($c$, $g$)} $\\$
+
+
+\tadAxiomas[\paratodo{casillero}{c}, \paratodo{direcci\'on}{d}, \paratodo{nat}{alt, anch}, \paratodo{conj(casillero)}{p, r, e}, \paratodo{dicc(casillero, color)}{cc, co} \paratodo{grilla}{g}]
+\tadAlinearAxiomas{casillerosConObjetos(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{}
+
+\tadAxioma{alto(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$alt$}
+\tadAxioma{ancho(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$anch$}
+\tadAxioma{pisos(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$p$}
+\tadAxioma{rampas(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$r$}
+\tadAxioma{elevaciones(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$e$}
+\tadAxioma{casillerosColoridos(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$cc$}
+\tadAxioma{casillerosConObjetos(crear($p$, $r$, $e$, $cc$, $co$, $alt$, $anch$))}{$co$}
+
+
+\tadAxioma{esCasilleroV\'alido($c$, $g$)?}{$c$ $\in$ pisos($g$) $\vee$ $c$ $\in$ rampas($g$) $\vee$ $c$ $\in$ elevaciones($g$)}
+\tadAxioma{haySiguienteCasillero?($c$, $d$, $g$)}{($d$ = arriba $\land$ $\pi_{1}(c)$ $>$ 0) $\vee$ ($d$ = abajo $\land$ $\pi_{1}(c)$ $<$ alto($g$)) $\vee$ ($d$ = derecha $\land$ $\pi_{2}(c)$ $>$ ancho($g$)) $\vee$ ($d$ = izquierda $\land$ $\pi_{2}(c)$ $>$ 0)}
+\tadAxioma{siguienteCasillero($c$, $d$)}
+{$\textbf{if}$ $d$ = arriba $\textbf{then}$ \\
+    \hspace*{0.3cm} $\langle \pi_{1}(c) + 1$, $\pi_{2}(c) \rangle$ \\
+$\textbf{else}$ \\
+    \hspace*{0.3cm} $\textbf{if}$ $d$ = abajo $\textbf{then}$ \\
+        \hspace*{0.6cm} $\langle \pi_{1}(c) - 1$, $\pi_{2}(c) \rangle$ \\
+    \hspace*{0.3cm} $\textbf{else}$ \\
+        \hspace*{0.6cm} $\textbf{if}$ $d$ = derecha $\textbf{then}$ \\
+            \hspace*{0.9cm} $\langle \pi_{1}(c)$, $\pi_{2}(c)+1 \rangle$ \\
+        \hspace*{0.6cm} $\textbf{else}$ \\
+            \hspace*{0.9cm} $\langle \pi_{1}(c)$, $\pi_{2}(c)-1 \rangle$ \\
+        \hspace*{0.6cm} $\textbf{fi}$ \\
+    \hspace*{0.3cm} $\textbf{fi}$ \\
+$\textbf{fi}$}
+\tadAxioma{esPiso?($c$, $g$)}{$c$ $\in$ pisos($g$)}
+\tadAxioma{esRampa?($c$, $g$)}{$c$ $\in$ rampas($g$)}
+\tadAxioma{esElevaci\'on?($c$, $g$)}{$c$ $\in$ elevaciones($g$)}
+\tadAxioma{hayObjeto?($c$, $g$)}{c $\in$ casillerosConObjetos($g$)}
+\tadAxioma{tieneColorCas?($c$, $g$)}{$c$ $\in$ casillerosColoridos($g$)}
+\tadAxioma{colorObjeto($c$, $g$)}{obtener($c$, casillerosConObjetos($g$))}
+\tadAxioma{colorCasillero($c$, $g$)}{obtener($c$, casillerosColoridos($g$))}
+
+
+
+
+\end{tad}
+
+
+
+\end{document}
